@@ -14,7 +14,7 @@ Comunicaciones - Ingeniería Mecatrónica, Universidad Militar Nueva Granada.
 ## Arranque
 
 ```bash
-git clone <URL_DEL_REPOSITORIO>
+git clone <[URL_DEL_REPOSITORIO](https://github.com/Dani-bit-hub/parcial-redes-comunicaciones-2026.git)>
 cd <CARPETA_DEL_REPOSITORIO>
 cp .env.example .env
 docker compose up -d
