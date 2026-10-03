@@ -22,6 +22,7 @@ docker compose up -d
 
 -Es necesario tener el docker instalado y abierto para que se creen los 
 respectivos contenedores correctamente.
+
 -La primera vez descarga imágenes y construye la de Jupyter (varios minutos).
 Después, Joomla se auto-instala sobre PostgreSQL y el cuaderno se ejecuta solo
 (unos 3 a 5 minutos en total). Estado: `docker compose ps` (los 5 en `healthy`).
