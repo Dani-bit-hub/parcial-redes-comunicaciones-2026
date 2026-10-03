@@ -41,6 +41,9 @@ services:
       - joomla_logs:/var/log/apache2
       - ./joomla/apache-logs.conf:/etc/apache2/conf-enabled/zz-joomla-logs.conf:ro
       - ./joomla/000-default.conf:/etc/apache2/sites-available/000-default.conf:ro
+      - ./joomla/user.css:/var/www/html/media/templates/site/cassiopeia/css/user.css:ro
+      - ./joomla/assets/banner.jpg:/var/www/html/images/banner.jpg:ro
+
     depends_on:
       database:
         condition: service_healthy
