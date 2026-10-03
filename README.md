@@ -14,13 +14,15 @@ Comunicaciones - Ingeniería Mecatrónica, Universidad Militar Nueva Granada.
 ## Arranque
 
 ```bash
-git clone <(https://github.com/Dani-bit-hub/parcial-redes-comunicaciones-2026.git)>
-cd <CARPETA_DEL_REPOSITORIO>
+git clone https://github.com/Dani-bit-hub/parcial-redes-comunicaciones-2026.git
+cd parcial-redes-comunicaciones-2026
 cp .env.example .env
 docker compose up -d
 ```
 
-La primera vez descarga imágenes y construye la de Jupyter (varios minutos).
+-Es necesario tener el docker instalado y abierto para que se creen los 
+respectivos contenedores correctamente.
+-La primera vez descarga imágenes y construye la de Jupyter (varios minutos).
 Después, Joomla se auto-instala sobre PostgreSQL y el cuaderno se ejecuta solo
 (unos 3 a 5 minutos en total). Estado: `docker compose ps` (los 5 en `healthy`).
 
