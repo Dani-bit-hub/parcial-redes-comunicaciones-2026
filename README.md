@@ -38,7 +38,7 @@ Después, Joomla se auto-instala sobre PostgreSQL y el cuaderno se ejecuta solo
 
 - **Grafana:** datasource PostgreSQL y dashboard "Tráfico Joomla" (4 paneles) cargados desde `grafana/provisioning/`. Acceso anónimo de solo lectura.
 - **Jupyter:** sin token. `/jupyter` abre `work/analisis_datos.ipynb`, ya ejecutado.
-- **Logs:** nginx escribe `access_json.log`; un proceso en Jupyter lo carga en la tabla `access_logs` de PostgreSQL, que consultan Grafana y el cuaderno.
+- **Logs:** nginx escribe `access_json.log` y Apache de Joomla escribe `joomla_access.log`, cada uno en un volumen compartido. Procesos en Jupyter los cargan en las tablas `access_logs` y `apache_logs` de PostgreSQL, que consultan Grafana y el cuaderno.
 - **Tráfico de calentamiento:** un script genera peticiones para que las gráficas tengan datos desde el primer minuto.
 
 ## Estructura

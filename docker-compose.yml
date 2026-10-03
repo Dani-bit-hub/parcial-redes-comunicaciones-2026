@@ -38,6 +38,9 @@ services:
       JOOMLA_ADMIN_EMAIL: ${JOOMLA_ADMIN_EMAIL}
     volumes:
       - joomla_data:/var/www/html
+      - joomla_logs:/var/log/apache2
+      - ./joomla/apache-logs.conf:/etc/apache2/conf-enabled/zz-joomla-logs.conf:ro
+      - ./joomla/000-default.conf:/etc/apache2/sites-available/000-default.conf:ro
     depends_on:
       database:
         condition: service_healthy
@@ -87,6 +90,7 @@ services:
       - ./jupyter/init:/usr/local/bin/before-notebook.d:ro
       - nginx_logs:/var/log/nginx:ro
       - ./jupyter/scripts:/opt/scripts:ro
+      - joomla_logs:/var/log/joomla:ro
     depends_on:
       database:
         condition: service_healthy
@@ -120,6 +124,7 @@ services:
     volumes:
       - ./grafana/provisioning:/etc/grafana/provisioning
       - grafana_data:/var/lib/grafana
+      - joomla_logs:/var/log/joomla:ro
     depends_on:
       database:
         condition: service_healthy
@@ -146,3 +151,4 @@ volumes:
   joomla_data:
   nginx_logs:
   grafana_data:
+  joomla_logs:

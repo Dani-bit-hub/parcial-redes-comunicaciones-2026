@@ -54,20 +54,36 @@ Decisiones de diseño:
 - **Un solo puerto expuesto.** Todo el tráfico externo entra por nginx en el 80.
 - **`backend_net` con `internal: true`.** Docker no crea ruta hacia el exterior ni publica puertos en esa red, por lo que `database` no tiene visibilidad externa.
 - **Jupyter y Grafana también están en `backend_net`.** El enunciado define PostgreSQL como fuente consultable por ambos. Jupyter además ejecuta el proceso de ingesta que inserta los logs. Es una ampliación respecto a la topología mínima (que solo exige joomla, database y opcionalmente grafana) y se justifica por el flujo de datos de la sección 1.3.
-- **Persistencia.** Volúmenes nombrados: `pgdata` (`/var/lib/postgresql/data`), `joomla_data` (`/var/www/html`), `grafana_data`, `nginx_logs`. Bind-mounts: cuaderno de Jupyter y provisioning de Grafana.
+- **Persistencia.** Volúmenes nombrados: `pgdata` (`/var/lib/postgresql/data`), `joomla_data` (`/var/www/html`), `joomla_logs` (`/var/log/apache2`), `grafana_data`, `nginx_logs`. Bind-mounts: cuaderno de Jupyter, scripts, provisioning de Grafana y configuración de Apache/nginx.
 - **Sincronización.** `database` tiene healthcheck con `pg_isready`, y joomla, jupyter y grafana usan `depends_on` con `condition: service_healthy`, así Joomla no intenta instalarse antes de que PostgreSQL acepte conexiones.
 
 ### 1.3 Recolección de logs y métricas
 
-Grafana no lee archivos de log directamente, por lo que los eventos de nginx se llevan a PostgreSQL:
+Grafana no lee archivos de log directamente, por lo que los eventos se llevan a PostgreSQL desde **dos fuentes**, ambas compartidas por volumen:
 
-1. **Generación.** nginx registra cada petición en `/var/log/nginx/access_json.log` con un `log_format` JSON (hora, IP, método, URI, código, bytes, tiempo de respuesta, user agent y el campo `service` que identifica a qué backend se enrutó).
-2. **Compartición.** Ese archivo vive en el volumen nombrado `nginx_logs`, montado en lectura-escritura en nginx y en solo lectura en jupyter.
-3. **Ingesta.** Al arrancar jupyter, un hook de `before-notebook.d` lanza `ingest_logs.py` en segundo plano. Crea la tabla `access_logs`, lee el archivo desde el inicio, sigue leyendo en vivo (cada segundo) e inserta cada línea.
-4. **Consulta.** Grafana tiene aprovisionado un datasource PostgreSQL y el dashboard "Tráfico Joomla". Sus 4 paneles ejecutan SQL sobre `access_logs`: peticiones por minuto de Joomla, peticiones por código HTTP, IPs más recurrentes y peticiones por servicio.
-5. **Análisis.** El cuaderno `analisis_datos.ipynb` consulta la misma tabla con SQLAlchemy y psycopg2 y grafica con pandas y matplotlib.
+**Fuente A: logs de acceso de nginx** (tabla `access_logs`)
 
-Limitación conocida: si se reinicia solo el contenedor jupyter, la ingesta relee el log desde el principio y duplica filas. No afecta el despliegue limpio (`up -d`).
+1. **Generación.** nginx registra cada petición en `/var/log/nginx/access_json.log` con un `log_format` JSON (hora, IP, método, URI, código, bytes, tiempo de respuesta, user agent y el campo `service`, que identifica a qué backend se enrutó).
+2. **Compartición.** El archivo vive en el volumen nombrado `nginx_logs`, montado en lectura-escritura en nginx y en solo lectura en jupyter.
+3. **Ingesta.** Al arrancar jupyter, un hook de `before-notebook.d` lanza `ingest_logs.py`, que crea la tabla, lee el archivo desde el inicio, sigue leyendo en vivo (cada segundo) e inserta cada línea.
+
+**Fuente B: logs de acceso de Apache en Joomla** (tabla `apache_logs`)
+
+1. **Generación.** Un vhost propio (`joomla/000-default.conf`) y un `LogFormat` (`joomla/apache-logs.conf`) hacen que Apache escriba en `/var/log/apache2/joomla_access.log`. Fue necesario reemplazar el vhost por defecto, porque un `CustomLog` declarado dentro de un `VirtualHost` anula al global y el archivo quedaba vacío.
+2. **Compartición.** `/var/log/apache2` de Joomla es el volumen nombrado `joomla_logs`, montado en solo lectura en `jupyter` y en `grafana` (en `/var/log/joomla`).
+3. **Ingesta.** `ingest_apache.py` interpreta cada línea con una expresión regular (formato Apache, no JSON) e inserta en `apache_logs`.
+
+**Consulta y análisis**
+
+4. **Grafana.** Tiene aprovisionado un datasource PostgreSQL y el dashboard "Tráfico Joomla" con 6 paneles: 4 sobre `access_logs` (peticiones por minuto de Joomla, por código HTTP, IPs más recurrentes y peticiones por servicio) y 2 sobre `apache_logs` (peticiones por minuto y por código HTTP según el propio log de Apache de Joomla).
+5. **Jupyter.** El cuaderno `analisis_datos.ipynb` consulta `access_logs` con SQLAlchemy y psycopg2 y grafica con pandas y matplotlib.
+
+Con dos fuentes se pueden contrastar las peticiones vistas por el proxy (nginx) con las que Apache de Joomla registró.
+
+Limitaciones conocidas:
+
+- Si se reinicia solo el contenedor jupyter, las ingestas releen sus logs desde el principio y duplican filas. No afecta el despliegue limpio (`up -d`).
+- En `apache_logs` la columna `remote_addr` queda vacía, porque el encabezado `X-Forwarded-For` no llega a ese registro de Apache. No se investigó la causa en este entorno.
 
 ### 1.4 Automatización del despliegue
 

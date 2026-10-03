@@ -3,7 +3,8 @@
   "title": "Tráfico Joomla",
   "tags": [
     "joomla",
-    "nginx"
+    "nginx",
+    "apache"
   ],
   "timezone": "browser",
   "schemaVersion": 39,
@@ -16,7 +17,7 @@
   "panels": [
     {
       "id": 1,
-      "title": "Peticiones por minuto (Joomla)",
+      "title": "Peticiones por minuto (Joomla, vía nginx)",
       "type": "timeseries",
       "datasource": {
         "type": "grafana-postgresql-datasource",
@@ -49,7 +50,7 @@
     },
     {
       "id": 2,
-      "title": "Peticiones por código HTTP",
+      "title": "Peticiones por código HTTP (nginx)",
       "type": "barchart",
       "datasource": {
         "type": "grafana-postgresql-datasource",
@@ -87,7 +88,7 @@
     },
     {
       "id": 3,
-      "title": "IPs más recurrentes",
+      "title": "IPs más recurrentes (nginx)",
       "type": "table",
       "datasource": {
         "type": "grafana-postgresql-datasource",
@@ -120,7 +121,7 @@
     },
     {
       "id": 4,
-      "title": "Peticiones por servicio",
+      "title": "Peticiones por servicio (nginx)",
       "type": "piechart",
       "datasource": {
         "type": "grafana-postgresql-datasource",
@@ -158,6 +159,77 @@
           "values": true,
           "calcs": [],
           "fields": ""
+        }
+      }
+    },
+    {
+      "id": 5,
+      "title": "Peticiones por minuto (log de Apache de Joomla)",
+      "type": "timeseries",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "postgres-logs"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 16,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "postgres-logs"
+          },
+          "refId": "A",
+          "format": "time_series",
+          "rawQuery": true,
+          "editorMode": "code",
+          "rawSql": "SELECT date_trunc('minute', time) AS time, count(*) AS peticiones FROM apache_logs WHERE $__timeFilter(time) GROUP BY 1 ORDER BY 1"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {}
+    },
+    {
+      "id": 6,
+      "title": "Peticiones por código HTTP (log de Apache de Joomla)",
+      "type": "barchart",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "postgres-logs"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 16,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "postgres-logs"
+          },
+          "refId": "A",
+          "format": "table",
+          "rawQuery": true,
+          "editorMode": "code",
+          "rawSql": "SELECT status::text AS codigo, count(*) AS peticiones FROM apache_logs WHERE $__timeFilter(time) GROUP BY 1 ORDER BY 1"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {
+        "xField": "codigo",
+        "legend": {
+          "showLegend": false
         }
       }
     }
