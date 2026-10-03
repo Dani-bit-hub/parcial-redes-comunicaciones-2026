@@ -38,6 +38,8 @@ services:
       JOOMLA_ADMIN_EMAIL: ${JOOMLA_ADMIN_EMAIL}
     volumes:
       - joomla_data:/var/www/html
+      - ./joomla/user.css:/var/www/html/media/templates/site/cassiopeia/css/user.css:ro
+      - ./joomla/assets/banner.jpg:/var/www/html/images/banner.jpg:ro
     depends_on:
       database:
         condition: service_healthy
