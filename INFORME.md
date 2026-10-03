@@ -3,7 +3,7 @@
 **Asignatura:** Comunicaciones, Ingeniería Mecatrónica
 **Integrantes:** Jesús Daniel Chamorro Zamora, Luna Fernanda Scott Martinez
 **Profesor:** Ing. Andrés Julián Moreno M.Sc.
-**Fecha:** 2 de octubre de 2026
+**Fecha:**
 
 ## Sección 1: Topología y flujo de información
 
